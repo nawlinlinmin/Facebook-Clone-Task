@@ -14,7 +14,15 @@ class FeedsController < ApplicationController
 
   # GET /feeds/new
   def new
-    @feed = Feed.new
+    if params[:back]
+      @feed = Feed.new(feed_params)
+    else
+      @feed = Feed.new
+    end
+  end
+
+  def confirm
+    @feed = Feed.new(feed_params)
   end
 
   # GET /feeds/1/edit
@@ -24,25 +32,23 @@ class FeedsController < ApplicationController
   # POST /feeds
   # POST /feeds.json
   def create
-    @feed = Feed.new(feed_params)
-
-    respond_to do |format|
-      if @feed.save
-        format.html { redirect_to @feed, notice: 'Feed was successfully created.' }
-        format.json { render :show, status: :created, location: @feed }
+      @feed = Feed.new(feed_params)
+      @feed.user_id = current_user.id
+      if params[:back]
+        render :new
       else
-        format.html { render :new }
-        format.json { render json: @feed.errors, status: :unprocessable_entity }
+        if @feed.save
+          redirect_to feeds_path, notice: "Picture was successfully created."
+        else
+          render :new
+        end
       end
     end
-  end
-
-  # PATCH/PUT /feeds/1
-  # PATCH/PUT /feeds/1.json
+     # PATCH/PUT /feeds/1.json
   def update
     respond_to do |format|
       if @feed.update(feed_params)
-        format.html { redirect_to @feed, notice: 'Feed was successfully updated.' }
+        format.html { redirect_to @feed, notice: 'Picture was successfully updated.' }
         format.json { render :show, status: :ok, location: @feed }
       else
         format.html { render :edit }
@@ -62,13 +68,12 @@ class FeedsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_feed
-      @feed = Feed.find(params[:id])
-    end
 
-    # Only allow a list of trusted parameters through.
-    def feed_params
-      params.require(:feed).permit(:image,:content, :image_cache)
-    end
+  def set_feed
+    @feed = Feed.find(params[:id])
+  end
+
+  def feed_params
+    params.require(:feed).permit(:image, :image_cache, :content)
+  end
 end
